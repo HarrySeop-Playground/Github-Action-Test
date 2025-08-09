@@ -1,0 +1,73 @@
+name: '🧑‍💻 이슈: 작성자 자동 할당'
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  self_assign:
+    name: '👤 작성자를 담당자로 자동 지정'
+    runs-on: ubuntu-latest
+    steps:
+      - name: '🏷️ 작성자 추가 (이미 배정이면 건너뜀) + 성공 시 댓글'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const issue_number = issue.number;
+            const author = issue.user.login;
+
+            const assignees = Array.isArray(issue.assignees) 
+              ? issue.assignees.map(a => a.login) 
+              : [];
+
+            // 1) 작성자가 이미 담당자면 종료
+            if (assignees.includes(author)) {
+              core.info(`ℹ️ @${author} 이미 담당자입니다. 건너뜀 (#${issue_number})`);
+              return;
+            }
+
+            // 2) 작성자를 Assignee로 추가
+            await github.rest.issues.addAssignees({
+              owner, repo, issue_number,
+              assignees: [author],
+            });
+            core.info(`✅ @${author} 님을 #${issue_number} 이슈의 담당자로 지정 완료`);
+
+            // 3) (옵션) 마일스톤 자동 지정
+            /*
+            let milestoneNote = '';
+            if (issue.milestone) {
+              core.info(`ℹ️ 이미 마일스톤이 지정되어 있어 건너뜁니다: ${issue.milestone.title}`);
+            } else {
+              const milestones = await github.paginate(
+                github.rest.issues.listMilestones,
+                { owner, repo, state: 'open', sort: 'due_on', direction: 'asc', per_page: 100 }
+              );
+              const now = new Date();
+              const upcoming = milestones.filter(m => m.due_on && new Date(m.due_on) >= now);
+              if (upcoming.length > 0) {
+                const target = upcoming[0];
+                await github.rest.issues.update({
+                  owner, repo, issue_number,
+                  milestone: target.number,
+                });
+                core.info(`🗓️ 마일스톤 자동 지정: ${target.title} (due ${target.due_on})`);
+                milestoneNote = `\n🗓️ 마일스톤: **${target.title}** (마감 ${String(target.due_on).slice(0,10)})로 자동 지정했어요.`;
+              } else {
+                core.info('ℹ️ 마감일이 있는 열린 마일스톤을 찾지 못해 건너뜁니다.');
+              }
+            }
+            */
+
+            // 4) 성공 댓글
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              // 마일스톤 지정 기능까지 사용할 경우 아래 문구에 milestoneNote 변수를 추가하세요.
+              // body: `✅ @${author} 님을 이 이슈의 담당자로 자동 지정했어요!${milestoneNote}`
+              body: `✅ @${author} 님을 이 이슈의 담당자로 자동 지정했어요!`
+            });
