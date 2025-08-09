@@ -1,4 +1,5 @@
 name: '🧑‍💻 이슈: 작성자 자동 할당'
+
 on:
   issues:
     types: [opened]
@@ -8,27 +9,33 @@ permissions:
 
 jobs:
   self_assign:
+    name: '👤 작성자를 담당자로 자동 지정'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
+      - name: '🏷️ 작성자 추가 (이미 배정이면 건너뜀) + 성공 시 댓글'
+        uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const issue_number = context.payload.issue.number;
-            const author = context.payload.issue.user.login;
+            const issue = context.payload.issue;
+            const issue_number = issue.number;
+            const author = issue.user.login;
 
-            try {
-              // 👤 작성자를 Assignee로 지정
-              await github.rest.issues.addAssignees({
-                owner, repo, issue_number,
-                assignees: [author],
-              });
+            const assignees = Array.isArray(issue.assignees) ? issue.assignees.map(a => a.login) : [];
 
-              // 📝 지정 성공 시에만 댓글 남김
-              await github.rest.issues.createComment({
-                owner, repo, issue_number,
-                body: `✅ @${author} 님을 이 이슈의 담당자로 자동 지정했어요!`
-              });
-            } catch (error) {
-              core.warning(`⚠️ Assignee 지정 실패: ${error.message}`);
+            // 작성자가 이미 배정돼 있으면 바로 종료
+            if (assignees.includes(author)) {
+              core.info(`ℹ️ @${author} 이미 담당자입니다. 건너뜀 (#${issue_number})`);
+              return;
             }
+
+            // 기존 담당자는 그대로 두고 작성자만 추가
+            await github.rest.issues.addAssignees({
+              owner, repo, issue_number,
+              assignees: [author],
+            });
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              body: `✅ @${author} 님을 이 이슈의 담당자로 자동 지정했어요!`
+            });
