@@ -1,0 +1,52 @@
+[
+  {
+    "name": "📦 Chore",
+    "color": "73242e",
+    "description": "설정, 빌드 변경 등"
+  },
+  {
+    "name": "✨ Feat",
+    "color": "e4e669",
+    "description": "기능 개발 및 추가"
+  },
+  {
+    "name": "🚀 Deploy",
+    "color": "C2E0C6",
+    "description": "배포 관련"
+  },
+  {
+    "name": "🎨 Style",
+    "color": "7057ff",
+    "description": "UI 및 스타일링 관련"
+  },
+  {
+    "name": "🐞 Bug",
+    "color": "b60205",
+    "description": "버그 수정"
+  },
+  {
+    "name": "📝 Docs",
+    "color": "7fbe76",
+    "description": "문서 작성 및 수정 (README.md 등)"
+  },
+  {
+    "name": "📬 API",
+    "color": "bfd4f2",
+    "description": "서버 API 통신"
+  },
+  {
+    "name": "♻️ Refactor",
+    "color": "008672",
+    "description": "코드 리팩토링, 컴포넌트 분리 등"
+  },
+  {
+    "name": "🔨 Fix",
+    "color": "d73a49",
+    "description": "단순 오타 수정"
+  },
+  {
+    "name": "✅ Test",
+    "color": "ccffc4",
+    "description": "테스트 관련"
+  }
+]
